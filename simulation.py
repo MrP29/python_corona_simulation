@@ -28,16 +28,8 @@ class Simulation():
     #TODO: if lockdown or otherwise stopped: destination -1 means no motion
     def __init__(self, *args, **kwargs):
         #load default config data
-        self.Config = Configuration(*args, **kwargs)
+        self.Config = None #Configuration(*args, **kwargs)
         self.frame = 0
-
-        #initialize default population
-        self.population_init()
-
-        self.pop_tracker = Population_trackers()
-
-        #initalise destinations vector
-        self.destinations = initialize_destination_matrix(self.Config.pop_size, 1)
 
 
     def reinitialise(self):
@@ -216,22 +208,37 @@ class SimBuilder:
     def basicSimulation(self) -> Simulation:
         self._sim = Simulation()
         self._sim.Config = Basic_Config()
+
+        self.set_population()
         return self._sim
 
     def lockDownSimulation(self) -> Simulation:
         self._sim = Simulation()
         self._sim.Config = LockDown_Config()
+
+        self.set_population()
         return self._sim
 
     def selfIsoSimulation(self) -> Simulation:
         self._sim = Simulation()
         self._sim.Config = SelfIsolation_Config()
+
+        self.set_population()
         return self._sim
 
     def reducedIntSimulation(self) -> Simulation:
         self._sim = Simulation()
         self._sim.Config = ReducedInteraction_Config()
+
+        self.set_population()
         return self._sim
+
+    def set_population(self):
+        #initialize default population
+        self._sim.population_init()
+        self._sim.pop_tracker = Population_trackers()
+        #initalise destinations vector
+        self._sim.destinations = initialize_destination_matrix(self._sim.Config.pop_size, 1)
 
 
 if __name__ == '__main__':
