@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from config import Configuration, config_error
+from config import Configuration, config_error, DefaultConfig, LockDownConfig, SelfIsoConfig, ReducedIntConfig
 from environment import build_hospital
 from infection import find_nearby, infect, recover_or_die, compute_mortality,\
 healthcare_infection_correction
@@ -27,7 +27,7 @@ class Simulation():
     #TODO: if lockdown or otherwise stopped: destination -1 means no motion
     def __init__(self, *args, **kwargs):
         #load default config data
-        self.Config = Configuration(*args, **kwargs)
+        self.Config = DefaultConfig(*args, **kwargs)
         self.frame = 0
 
         #initialize default population
@@ -207,7 +207,8 @@ dead: %i, of total: %i' %(self.frame, self.pop_tracker.susceptible[-1], self.pop
         plot_sir(self.Config, self.pop_tracker, size, include_fatalities,
                  title)
 
-
+    def setConfig(self, config: Configuration):
+        self.Config = config
 
 if __name__ == '__main__':
 
@@ -226,16 +227,14 @@ if __name__ == '__main__':
     #sim.Config.colorblind_type = 'deuteranopia'
 
     #set reduced interaction
-    #sim.Config.set_reduced_interaction()
+    #sim.setConfig((ReducedIntConfig()))
     #sim.population_init()
 
     #set lockdown scenario
-    #sim.Config.set_lockdown(lockdown_percentage = 0.1, lockdown_compliance = 0.95)
+    #sim.setConfig((LockDownConfig()))
 
     #set self-isolation scenario
-    #sim.Config.set_self_isolation(self_isolate_proportion = 0.9,
-    #                              isolation_bounds = [0.02, 0.02, 0.09, 0.98],
-    #                              traveling_infects=False)
+    #sim.setConfig((SelfIsoConfig()))
     #sim.population_init() #reinitialize population to enforce new roaming bounds
 
     #run, hold CTRL+C in terminal to end scenario early
