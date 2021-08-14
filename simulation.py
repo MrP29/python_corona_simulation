@@ -5,8 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from config import Configuration, config_error, Basic_Config, LockDown_Config, SelfIsolation_Config, \
-    ReducedInteraction_Config
+from config import ConfigBuilder, config_error, BasicConfigBuilder, LockDownConfigBuilder, SelfIsolationConfigBuilder, \
+    ReducedInteractionConfigBuilder
 from environment import build_hospital
 from infection import find_nearby, infect, recover_or_die, compute_mortality,\
 healthcare_infection_correction
@@ -201,36 +201,17 @@ dead: %i, of total: %i' %(self.frame, self.pop_tracker.susceptible[-1], self.pop
                  title)
 
 
-class SimBuilder:
-    def __init__(self) -> None:
-        self._sim = None
+class SimDirector:
+    def __init__(self, builder: ConfigBuilder) -> None:
+        self._sim = None #Simulation()
+        self._config = builder
 
-    def basicSimulation(self) -> Simulation:
+    def construct(self):
         self._sim = Simulation()
-        self._sim.Config = Basic_Config()
-
+        self._sim.Config = self._config
         self.set_population()
-        return self._sim
 
-    def lockDownSimulation(self) -> Simulation:
-        self._sim = Simulation()
-        self._sim.Config = LockDown_Config()
-
-        self.set_population()
-        return self._sim
-
-    def selfIsoSimulation(self) -> Simulation:
-        self._sim = Simulation()
-        self._sim.Config = SelfIsolation_Config()
-
-        self.set_population()
-        return self._sim
-
-    def reducedIntSimulation(self) -> Simulation:
-        self._sim = Simulation()
-        self._sim.Config = ReducedInteraction_Config()
-
-        self.set_population()
+    def getResult(self) -> Simulation:
         return self._sim
 
     def set_population(self):
@@ -241,27 +222,28 @@ class SimBuilder:
         self._sim.destinations = initialize_destination_matrix(self._sim.Config.pop_size, 1)
 
 
+
 if __name__ == '__main__':
 
     #initialize
-    simBuilder = SimBuilder()
-    #set basic scenario
-    simulation = simBuilder.basicSimulation()
+    builder = BasicConfigBuilder()
 
     #set reduced interaction
-    #simulation = simBuilder.reducedIntSimulation()
+    #builder = ReducedInteractionConfigBuilder()
 
     #set lockdown scenario
-    #simulation = simBuilder.lockDownSimulation()
+    #builder = LockDownConfigBuilder()
 
     #set self-isolation scenario
-    #simulation = simBuilder.selfIsoSimulation()
+    #builder = SelfIsolationConfigBuilder()
 
-    #set number of simulation steps
-#    sim.Config.simulation_steps = 20000
+    simDirector = SimDirector(builder)
+    simDirector.construct()
+    #set basic scenario
+    simulation = simDirector.getResult()
 
     #set color mode
-#    sim.Config.plot_style = 'default' #can also be dark
+    #sim.Config.plot_style = 'default' #can also be dark
 
     #set colorblind mode if needed
     #sim.Config.colorblind_mode = True
