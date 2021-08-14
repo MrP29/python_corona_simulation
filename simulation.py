@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from config import Configuration, config_error
+from config import ConfigBuilder, config_error, BasicConfigBuilder, LockDownConfigBuilder, SelfIsolationConfigBuilder, \
+    ReducedInteractionConfigBuilder
 from environment import build_hospital
 from infection import find_nearby, infect, recover_or_die, compute_mortality,\
 healthcare_infection_correction
@@ -27,16 +28,8 @@ class Simulation():
     #TODO: if lockdown or otherwise stopped: destination -1 means no motion
     def __init__(self, *args, **kwargs):
         #load default config data
-        self.Config = Configuration(*args, **kwargs)
+        self.Config = None #Configuration(*args, **kwargs)
         self.frame = 0
-
-        #initialize default population
-        self.population_init()
-
-        self.pop_tracker = Population_trackers()
-
-        #initalise destinations vector
-        self.destinations = initialize_destination_matrix(self.Config.pop_size, 1)
 
 
     def reinitialise(self):
@@ -208,35 +201,54 @@ dead: %i, of total: %i' %(self.frame, self.pop_tracker.susceptible[-1], self.pop
                  title)
 
 
+class SimDirector:
+    def __init__(self, builder: ConfigBuilder) -> None:
+        self._sim = None #Simulation()
+        self._config = builder
+
+    def construct(self):
+        self._sim = Simulation()
+        self._sim.Config = self._config
+        self.set_population()
+
+    def getResult(self) -> Simulation:
+        return self._sim
+
+    def set_population(self):
+        #initialize default population
+        self._sim.population_init()
+        self._sim.pop_tracker = Population_trackers()
+        #initalise destinations vector
+        self._sim.destinations = initialize_destination_matrix(self._sim.Config.pop_size, 1)
+
+
 
 if __name__ == '__main__':
 
     #initialize
-    sim = Simulation()
+    builder = BasicConfigBuilder()
 
-    #set number of simulation steps
-    sim.Config.simulation_steps = 20000
+    #set reduced interaction
+    #builder = ReducedInteractionConfigBuilder()
+
+    #set lockdown scenario
+    #builder = LockDownConfigBuilder()
+
+    #set self-isolation scenario
+    #builder = SelfIsolationConfigBuilder()
+
+    simDirector = SimDirector(builder)
+    simDirector.construct()
+    #set basic scenario
+    simulation = simDirector.getResult()
 
     #set color mode
-    sim.Config.plot_style = 'default' #can also be dark
+    #sim.Config.plot_style = 'default' #can also be dark
 
     #set colorblind mode if needed
     #sim.Config.colorblind_mode = True
     #set colorblind type (default deuteranopia)
     #sim.Config.colorblind_type = 'deuteranopia'
 
-    #set reduced interaction
-    #sim.Config.set_reduced_interaction()
-    #sim.population_init()
-
-    #set lockdown scenario
-    #sim.Config.set_lockdown(lockdown_percentage = 0.1, lockdown_compliance = 0.95)
-
-    #set self-isolation scenario
-    #sim.Config.set_self_isolation(self_isolate_proportion = 0.9,
-    #                              isolation_bounds = [0.02, 0.02, 0.09, 0.98],
-    #                              traveling_infects=False)
-    #sim.population_init() #reinitialize population to enforce new roaming bounds
-
     #run, hold CTRL+C in terminal to end scenario early
-    sim.run()
+    simulation.run()
