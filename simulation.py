@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from config import Configuration, config_error
+from config import Context, Strategy, config_error, ConcreteStrategyLockdown, ConcreteStrategySelfIsolation, ConcreteStrategyReducedInteraction
 from environment import build_hospital
 from infection import find_nearby, infect, recover_or_die, compute_mortality,\
 healthcare_infection_correction
@@ -27,7 +27,8 @@ class Simulation():
     #TODO: if lockdown or otherwise stopped: destination -1 means no motion
     def __init__(self, *args, **kwargs):
         #load default config data
-        self.Config = Configuration(*args, **kwargs)
+        self.context = Context()
+        self.Config = self.context.strategy
         self.frame = 0
 
         #initialize default population
@@ -215,10 +216,10 @@ if __name__ == '__main__':
     sim = Simulation()
 
     #set number of simulation steps
-    sim.Config.simulation_steps = 20000
+    #sim.Config.simulation_steps = 20000
 
     #set color mode
-    sim.Config.plot_style = 'default' #can also be dark
+    #sim.Config.plot_style = 'default' #can also be dark
 
     #set colorblind mode if needed
     #sim.Config.colorblind_mode = True
@@ -226,17 +227,16 @@ if __name__ == '__main__':
     #sim.Config.colorblind_type = 'deuteranopia'
 
     #set reduced interaction
-    #sim.Config.set_reduced_interaction()
-    #sim.population_init()
+    #sim.context.setStrategy(ConcreteStrategyReducedInteraction(0.001))
+
 
     #set lockdown scenario
-    #sim.Config.set_lockdown(lockdown_percentage = 0.1, lockdown_compliance = 0.95)
+    sim.context.setStrategy(ConcreteStrategyLockdown(0.1, 0.95))
+
 
     #set self-isolation scenario
-    #sim.Config.set_self_isolation(self_isolate_proportion = 0.9,
-    #                              isolation_bounds = [0.02, 0.02, 0.09, 0.98],
-    #                              traveling_infects=False)
-    #sim.population_init() #reinitialize population to enforce new roaming bounds
+    #sim.context.setStrategy(ConcreteStrategySelfIsolation(0.9, [0.02, 0.02, 0.09, 0.98], False))
+
 
     #run, hold CTRL+C in terminal to end scenario early
     sim.run()
