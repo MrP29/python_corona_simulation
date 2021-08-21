@@ -1,14 +1,25 @@
 '''
 file that contains all configuration related methods and classes
 '''
-
+import abc
 import numpy as np
+
+from abc import ABC, abstractmethod
 
 class config_error(Exception):
     pass
 
+class Context():
+    def __init__(self):
+        self.strategy = Strategy()
 
-class Configuration():
+    def setStrategy(self, Strategy):
+        self.strategy = Strategy
+
+    def executeStrategy(self, param1, param2, param3):
+        return self.strategy.execute(param1, param2, param3)
+
+class Strategy(metaclass=abc.ABCMeta):
     def __init__(self, *args, **kwargs):
         #simulation variables
         self.verbose = kwargs.get('verbose', True) #whether to print infections, recoveries and fatalities to the terminal
@@ -90,7 +101,9 @@ class Configuration():
         #lockdown variables
         self.lockdown_percentage = kwargs.get('lockdown_percentage', 0.1) 
         self.lockdown_vector = kwargs.get('lockdown_vector', [])
-        
+
+    def execute(self, param1, param2, param3):
+        pass
         
     def get_palette(self):
         '''returns appropriate color palette
@@ -136,43 +149,6 @@ class Configuration():
         '''reads config from filename'''
         #TODO: implement
         pass
-
-
-    def set_lockdown(self, lockdown_percentage=0.1, lockdown_compliance=0.9):
-        '''sets lockdown to active'''
-
-        self.lockdown = True
-
-        #fraction of the population that will obey the lockdown
-        self.lockdown_percentage = lockdown_percentage
-        self.lockdown_vector = np.zeros((self.pop_size,))
-        #lockdown vector is 1 for those not complying
-        self.lockdown_vector[np.random.uniform(size=(self.pop_size,)) >= lockdown_compliance] = 1
-
-
-    def set_self_isolation(self, self_isolate_proportion=0.9,
-                           isolation_bounds = [0.02, 0.02, 0.09, 0.98],
-                           traveling_infects=False):
-        '''sets self-isolation scenario to active'''
-
-        self.self_isolate = True
-        self.isolation_bounds = isolation_bounds
-        self.self_isolate_proportion = self_isolate_proportion
-        #set roaming bounds to outside isolated area
-        self.xbounds = [0.1, 1.1]
-        self.ybounds = [0.02, 0.98]
-        #update plot bounds everything is shown
-        self.x_plot = [0, 1.1]
-        self.y_plot = [0, 1]
-        #update whether traveling agents also infect
-        self.traveling_infects = traveling_infects
-
-
-    def set_reduced_interaction(self, speed = 0.001):
-        '''sets reduced interaction scenario to active'''
-
-        self.speed = speed
-
 
     def set_demo(self, destinations, population):
         #make C
@@ -391,3 +367,39 @@ class Configuration():
 
         #set all destinations active
         population[:,11] = 1
+
+
+
+class ConcreteStrategyLockdown(Strategy):
+    def execute(self, param1 = 0.1, param2 = 0.95, param3 = 0):
+        self.lockdown = True
+
+        # fraction of the population that will obey the lockdown
+        self.lockdown_percentage = param1
+        self.lockdown_vector = np.zeros((self.pop_size,))
+        # lockdown vector is 1 for those not complying
+        self.lockdown_vector[np.random.uniform(size=(self.pop_size,)) >= param2] = 1
+
+
+class ConcreteStrategySelfIsolation(Strategy):
+    def execute(self, param1 = 0.9, param2 = [0.02, 0.02, 0.09, 0.98], param3 = False):
+        '''sets self-isolation scenario to active'''
+
+        self.self_isolate = True
+        self.isolation_bounds = param2
+        self.self_isolate_proportion = param1
+        #set roaming bounds to outside isolated area
+        self.xbounds = [0.1, 1.1]
+        self.ybounds = [0.02, 0.98]
+        #update plot bounds everything is shown
+        self.x_plot = [0, 1.1]
+        self.y_plot = [0, 1]
+        #update whether traveling agents also infect
+        self.traveling_infects = param3
+
+
+class ConcreteStrategyReducedInteraction(Strategy):
+    def execute(self, param1 = 0.001, param2 = 0, param3 = 0):
+        '''sets reduced interaction scenario to active'''
+
+        self.speed = param1
